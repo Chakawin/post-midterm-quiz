@@ -97,6 +97,61 @@ class Table:
             pivot_table.append([item, aggregate_val_list])
         return pivot_table
 
+    def insert_row(self, dict):
+        '''
+        This method inserts a dictionary, dict, into a Table object, effectively adding a row to the Table.
+        '''
+        self.table.append(dict)
+
+
+    def update_row(self, primary_attribute, primary_attribute_value, update_attribute, update_value):
+        '''
+        This method updates the current value of update_attribute to update_value
+        For example, my_table.update_row('Film', 'A Serious Man', 'Year', '2022') will change the 'Year' attribute for the 'Film'
+        'A Serious Man' from 2009 to 2022
+        '''
+
+
     def __str__(self):
         return self.table_name + ':' + str(self.table)
 
+movies = []
+with open(os.path.join(__location__, 'movies.csv')) as f:
+    rows = csv.DictReader(f)
+    for r in rows:
+        movies.append(dict(r))
+
+table_movie = Table('movies',movies)
+
+my_DB = DB()
+my_DB.insert(table_movie)
+table_movie_genre = my_DB.search('movies')
+
+table_comedy = table_movie_genre.filter(lambda x: 'Comedy' in x['Genre'])
+print("Average value of ‘Worldwide Gross’ for ‘Comedy‘ movies")
+
+temp = 0
+for i in range(len(table_comedy.select(["Film"]))):
+    temp += table_comedy.aggregate(lambda x: x, 'Worldwide Gross')[i]
+print(temp/(i+1))
+print()
+print("Minimum ‘Audience score %’ for ‘Drama’ movies")
+table_drama = table_movie_genre.filter(lambda x: 'Drama' in x['Genre'])
+print(table_drama.aggregate(lambda x: min(x), 'Audience score %'))
+print()
+print("Number of fantasy movie")
+print(len(table_movie.filter(lambda x: x['Genre'] == 'Fantasy').select(["Film"])))
+print()
+dict = {}
+dict['Film'] = 'The Shape of Water'
+dict['Genre'] = 'Fantasy'
+dict['Lead Studio'] = 'Fox'
+dict['Audience score %'] = '72'
+dict['Profitability'] = '9.765'
+dict['Rotten Tomatoes %'] = '92'
+dict['Worldwide Gross'] = '195.3'
+dict['Year'] = '2017'
+table_movie.insert_row(dict)
+print(f"Insert {dict}")
+print("Number of fantasy movie")
+print(len(table_movie.filter(lambda x: x['Genre'] == 'Fantasy').select(["Film"])))
